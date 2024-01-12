@@ -1,10 +1,11 @@
 const QuestionPage = require("../models/QuestionPage");
 
 
-exports.QuestionCreate = async (req,res)=>{
+exports.QuestionCreate = async (req,res)=>{//Done
     try {
-        const {questionName,questionLink,author}=req.body;
-        if (!questionName || !questionLink || !author) {
+        const {questionName,questionLink,author,serialno}=req.body;
+        
+        if (!questionName || !questionLink || !author || !serialno) {
             return res.status(400).json({
                 success:false,
                 message:"All details are not present.",
@@ -14,6 +15,7 @@ exports.QuestionCreate = async (req,res)=>{
             questionName:questionName,
             questionLink:questionLink,
             author:author,
+            serialno:serialno,
         })
         return res.status(200).json({
             success:true,
@@ -30,36 +32,49 @@ exports.QuestionCreate = async (req,res)=>{
 
 exports.QuestionDelete = async (req,res)=>{
     try {
-        const questionIdToDelete = req.params.questionId;
-        const dataToDelete =await QuestionPage.deleteOne(
+        const questionIdToDelete = req.params.id;
+
+        const dataToDelete =await QuestionPage.findByIdAndDelete(
             { _id: questionIdToDelete }
         )
         return res.status(200).json({
             success:true,
             message:"Question Deleted Successfully.",
-            data:questions,
+            data:dataToDelete,
         });
     } catch (error) {
         return res.status(500).json({
             success:false,
-            message:`Failed to Question Creation.${error.message}`,
-            dataDeleted:dataToDelete,
+            message:`Failed to Question Deletion.${error.message}`,
+            // dataDeleted:dataToDelete,
         });
     }
 }
 
 exports.QuestionUpdate = async (req,res) =>{
     try {
-        const questionIdToUpdate = req.params.serialno;
-        if(!questionIdToUpdate){
+        const serialno = req.params.id;
+        const {questionName,questionLink,author}=req.body;
+        console.log(questionName);
+        if (!questionName || !questionLink || !author) {
+            return res.status(400).json({
+                success:false,
+                message:"All details are not present.",
+            });
+        }
+        if(!serialno){
             return res.status(400).json({
                 success:false,
                 message:"sectionName or SectionId name is not present.",
             });
         }
         const updatedQuestion = await QuestionPage.findOneAndUpdate(
-            { serialno: questionIdToUpdate },
-            { $set: updatedData }, // Assuming you want to update the entire document with the new data
+            { _id: serialno },
+            { $set: {
+                questionName:questionName,
+                questionLink:questionLink,
+                author:author
+            } }, // Assuming you want to update the entire document with the new data
             { new: true, useFindAndModify: false }
         );
         if (updatedQuestion) {
@@ -87,12 +102,14 @@ exports.QuestionUpdate = async (req,res) =>{
 
 exports.getAllQuestion = async (req,res) =>{
     try {
-        const allQuestions= await QuestionPage.findOne({}) 
-                                .populate({
-                                    path:"QuestionPage",
-                                    select:"questionName questionLink uploadDate author serialno",
-                                })
-                                .exec();
+        const q=req.params;
+
+        const allQuestions= await QuestionPage.find() 
+                                // .populate({
+                                //     // path:"QuestionPage",
+                                //     select:"questionName questionLink uploadDate author serialno",
+                                // })
+                                // .exec();
         return res.status(200).json({
             success:true,
             message:"All Questions Successfully.",
@@ -102,7 +119,26 @@ exports.getAllQuestion = async (req,res) =>{
         console.log(error)
         return res.status(500).json({
             success:false,
-            message:"All Fecthing Invalid Request",
+            message:"All Fetching Invalid Request",
+        });
+    }
+}
+
+exports.getQuestion = async (req,res) =>{
+    try {
+        const Qid=req.params;
+        const Question=await QuestionPage.findById(Qid.id) ;
+                               
+        return res.status(200).json({
+            success:true,
+            message:"Question Successfully found.",
+            data:Question,
+        });
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            success:false,
+            message:"Internal Server Error",
         });
     }
 }
