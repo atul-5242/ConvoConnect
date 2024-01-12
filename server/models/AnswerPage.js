@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const AnswerSchema=new mongoose.Schema({
-    name:{
+    nameAuthour:{
         type:String,
         require,
     },
